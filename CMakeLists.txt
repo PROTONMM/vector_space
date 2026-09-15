@@ -25,3 +25,12 @@ add_executable(vector_space
 target_include_directories(vector_space PRIVATE src ${SDL2_INCLUDE_DIRS})
 target_link_libraries(vector_space PRIVATE ${SDL2_LIBRARIES})
 target_compile_options(vector_space PRIVATE ${SDL2_CFLAGS_OTHER})
+
+# Keep runtime artwork next to the build output.
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/img" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+
+# Embed the application icon in Windows executables.
+if(WIN32)
+    enable_language(RC)
+    target_sources(vector_space PRIVATE resources/vector_space.rc)
+endif()

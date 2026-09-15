@@ -84,6 +84,8 @@ to `vector_space.exe`.
 - `src/pirate.*` implements hostile saucers and their movement.
 - `src/vector_font.*` contains the custom line-based font.
 - `src/bullet.*` and `src/particle.*` implement projectiles and visual effects.
+- `img/` contains the game icon and screenshots.
+- `resources/` contains the Windows executable icon resource.
 
 ## Third-party software
 

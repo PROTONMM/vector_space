@@ -36,6 +36,10 @@ Game::Game() {
         std::fprintf(stderr, "SDL_CreateWindow failed: %s\n", SDL_GetError());
         return;
     }
+    if (SDL_Surface* icon = SDL_LoadBMP("img/icon.bmp")) {
+        SDL_SetWindowIcon(m_window, icon);
+        SDL_FreeSurface(icon);
+    }
     m_renderer = SDL_CreateRenderer(m_window, -1,
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!m_renderer) {
