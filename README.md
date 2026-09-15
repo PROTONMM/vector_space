@@ -10,6 +10,8 @@ is drawn from line segments, with a bright core and a soft green phosphor glow.
 The game uses a fixed 720 x 960 logical canvas and preserves its 3:4 aspect ratio
 when the window is resized.
 
+![Vector Space gameplay](img/vs.png)
+
 ## Gameplay
 
 - Large rocks split into medium rocks, then into small fragments.
