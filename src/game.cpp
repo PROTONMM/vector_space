@@ -57,11 +57,14 @@ Game::Game() {
         SDL_TEXTUREACCESS_TARGET, kCanvasWidth, kCanvasHeight);
     m_bloom = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_TARGET, kCanvasWidth, kCanvasHeight);
-    if (!m_canvas || !m_bloom) {
+    m_glow = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888,
+        SDL_TEXTUREACCESS_TARGET, kCanvasWidth / 4, kCanvasHeight / 4);
+    if (!m_canvas || !m_bloom || !m_glow) {
         std::fprintf(stderr, "SDL_CreateTexture failed: %s\n", SDL_GetError());
         return;
     }
     SDL_SetTextureBlendMode(m_bloom, SDL_BLENDMODE_ADD);
+    SDL_SetTextureBlendMode(m_glow, SDL_BLENDMODE_ADD);
     std::srand((unsigned)SDL_GetTicks());
     m_ship = new Ship();
     m_pirate = new Pirate();
@@ -75,6 +78,7 @@ Game::~Game() {
     delete m_ship;
     SDL_DestroyTexture(m_canvas);
     SDL_DestroyTexture(m_bloom);
+    SDL_DestroyTexture(m_glow);
     SDL_DestroyRenderer(m_renderer);
     SDL_DestroyWindow(m_window);
     SDL_Quit();
@@ -402,10 +406,25 @@ void Game::RenderHud() {
 }
 
 void Game::Render() {
+    // Draw every luminous element once at full resolution. This texture is
+    // reused both as the crisp vector core and as the source of the glow.
     SDL_SetRenderTarget(m_renderer, m_bloom);
     SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
     SDL_RenderClear(m_renderer);
     RenderWorld();
+
+    // Downsampling the vector layer and filtering it back up produces a soft,
+    // even halo around each line without displacing the scene geometry.
+    SDL_RenderSetLogicalSize(m_renderer, 0, 0);
+    SDL_SetRenderTarget(m_renderer, m_glow);
+    // Keep this intermediate layer opaque. With a transparent background,
+    // downsampling reduces both RGB and alpha, causing the glow intensity to
+    // be multiplied twice when it is blended back into the scene.
+    SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+    SDL_RenderClear(m_renderer);
+    SDL_SetTextureAlphaMod(m_bloom, 255);
+    SDL_SetTextureBlendMode(m_bloom, SDL_BLENDMODE_ADD);
+    SDL_RenderCopy(m_renderer, m_bloom, nullptr, nullptr);
 
     SDL_SetRenderTarget(m_renderer, m_canvas);
     SDL_SetRenderDrawColor(m_renderer, 1, 6, 3, 255);
@@ -416,17 +435,35 @@ void Game::Render() {
         SDL_RenderDrawPoint(m_renderer, h % kCanvasWidth, (h >> 12) % kCanvasHeight);
     }
 
+    // Two low-intensity passes add a restrained neon bloom. The expanded pass
+    // creates the outer aura; the regular pass reinforces the glow near lines.
+    SDL_SetTextureAlphaMod(m_glow, 58);
+    const SDL_Rect outerGlow{-5, -5, kCanvasWidth + 10, kCanvasHeight + 10};
+    SDL_RenderCopy(m_renderer, m_glow, nullptr, &outerGlow);
+    SDL_SetTextureAlphaMod(m_glow, 112);
+    SDL_RenderCopy(m_renderer, m_glow, nullptr, nullptr);
+
+    // A faint one-pixel ring keeps the neon effect visible on software
+    // renderers where texture filtering may be limited or disabled.
     SDL_SetTextureAlphaMod(m_bloom, 24);
-    const SDL_Rect glowRects[] = {
-        {-4,-4,kCanvasWidth+8,kCanvasHeight+8}, {-2,-2,kCanvasWidth+4,kCanvasHeight+4},
-        {2,-2,kCanvasWidth,kCanvasHeight+4}, {-2,2,kCanvasWidth+4,kCanvasHeight},
-        {2,2,kCanvasWidth,kCanvasHeight}
+    const SDL_Rect nearGlow[] = {
+        {-2, 0, kCanvasWidth, kCanvasHeight},
+        { 2, 0, kCanvasWidth, kCanvasHeight},
+        { 0,-2, kCanvasWidth, kCanvasHeight},
+        { 0, 2, kCanvasWidth, kCanvasHeight},
+        {-1,-1, kCanvasWidth, kCanvasHeight},
+        { 1,-1, kCanvasWidth, kCanvasHeight},
+        {-1, 1, kCanvasWidth, kCanvasHeight},
+        { 1, 1, kCanvasWidth, kCanvasHeight}
     };
-    for (const SDL_Rect& rect : glowRects) SDL_RenderCopy(m_renderer, m_bloom, nullptr, &rect);
+    for (const SDL_Rect& rect : nearGlow)
+        SDL_RenderCopy(m_renderer, m_bloom, nullptr, &rect);
+
     SDL_SetTextureAlphaMod(m_bloom, 255);
     SDL_RenderCopy(m_renderer, m_bloom, nullptr, nullptr);
 
     SDL_SetRenderTarget(m_renderer, nullptr);
+    SDL_RenderSetLogicalSize(m_renderer, kCanvasWidth, kCanvasHeight);
     SDL_RenderCopy(m_renderer, m_canvas, nullptr, nullptr);
     SDL_RenderPresent(m_renderer);
 }

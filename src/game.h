@@ -36,7 +36,8 @@ private:
     SDL_Window* m_window = nullptr;
     SDL_Renderer* m_renderer = nullptr;
     SDL_Texture* m_canvas = nullptr;   // final render buffer
-    SDL_Texture* m_bloom = nullptr;    // blurred phosphor glow layer
+    SDL_Texture* m_bloom = nullptr;    // sharp vector layer
+    SDL_Texture* m_glow = nullptr;     // low-resolution phosphor glow layer
 
     bool m_running = false;
 
