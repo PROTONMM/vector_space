@@ -437,15 +437,15 @@ void Game::Render() {
 
     // Two low-intensity passes add a restrained neon bloom. The expanded pass
     // creates the outer aura; the regular pass reinforces the glow near lines.
-    SDL_SetTextureAlphaMod(m_glow, 58);
+    SDL_SetTextureAlphaMod(m_glow, 72);
     const SDL_Rect outerGlow{-5, -5, kCanvasWidth + 10, kCanvasHeight + 10};
     SDL_RenderCopy(m_renderer, m_glow, nullptr, &outerGlow);
-    SDL_SetTextureAlphaMod(m_glow, 112);
+    SDL_SetTextureAlphaMod(m_glow, 140);
     SDL_RenderCopy(m_renderer, m_glow, nullptr, nullptr);
 
     // A faint one-pixel ring keeps the neon effect visible on software
     // renderers where texture filtering may be limited or disabled.
-    SDL_SetTextureAlphaMod(m_bloom, 24);
+    SDL_SetTextureAlphaMod(m_bloom, 30);
     const SDL_Rect nearGlow[] = {
         {-2, 0, kCanvasWidth, kCanvasHeight},
         { 2, 0, kCanvasWidth, kCanvasHeight},
