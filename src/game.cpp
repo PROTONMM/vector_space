@@ -89,6 +89,7 @@ void Game::StartGame() {
     m_lives = 3;
     m_level = 0;
     m_nextExtraLife = 10000;
+    m_flashTimer = 0.0f;
     m_pirateTimer = 8.0f + (std::rand() % 500) / 100.0f;
     m_asteroids.clear();
     m_bullets.clear();
@@ -216,6 +217,7 @@ void Game::Update(float dt) {
     m_particles.erase(std::remove_if(m_particles.begin(), m_particles.end(),
         [](const Particle& p) { return !p.alive; }), m_particles.end());
     if (m_state == State::Title || m_state == State::GameOver) return;
+    if (m_flashTimer > 0.0f) m_flashTimer -= dt;
 
     for (Asteroid& asteroid : m_asteroids) asteroid.Update(dt);
     if (m_pirate->active) {
@@ -313,9 +315,10 @@ void Game::Update(float dt) {
     m_bullets.erase(std::remove_if(m_bullets.begin(), m_bullets.end(),
         [](const Bullet& b) { return !b.alive; }), m_bullets.end());
 
-    if (m_score >= m_nextExtraLife) {
+    while (m_score >= m_nextExtraLife) {
         ++m_lives;
         m_nextExtraLife += 10000;
+        m_flashTimer = 2.0f;
     }
     if (m_invulnerable > 0.0f) m_invulnerable -= dt;
     if (m_ship->alive && m_invulnerable <= 0.0f) {
@@ -377,7 +380,9 @@ void Game::RenderHud() {
         DrawVectorTextCentered(m_renderer, text, kCanvasWidth * 0.5f,
                                kCanvasHeight - 42, 17, kGreen);
         SDL_SetRenderDrawColor(m_renderer, kGreen.r, kGreen.g, kGreen.b, 255);
-        for (int i = 0; i < std::max(0, m_lives - 1); ++i) {
+        // Show the complete life count. Previously this displayed only reserve
+        // ships, which made a 3 -> 4 bonus look like a 2 -> 3 transition.
+        for (int i = 0; i < std::max(0, m_lives); ++i) {
             const int x = 30 + i * 23;
             const int y = kCanvasHeight - 34;
             SDL_RenderDrawLine(m_renderer, x, y + 12, x + 7, y - 8);
@@ -385,6 +390,9 @@ void Game::RenderHud() {
             SDL_RenderDrawLine(m_renderer, x + 14, y + 12, x + 7, y + 7);
             SDL_RenderDrawLine(m_renderer, x + 7, y + 7, x, y + 12);
         }
+        if (m_flashTimer > 0.0f)
+            DrawVectorTextCentered(m_renderer, "EXTRA LIFE", kCanvasWidth * 0.5f,
+                                   76, 18, kBright);
     }
     if (m_state == State::Title) {
         DrawVectorTextCentered(m_renderer, "VECTOR", kCanvasWidth * 0.5f, 250, 52, kBright);
