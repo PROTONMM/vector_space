@@ -1,0 +1,59 @@
+# CMake build directories
+/build/
+/build-*/
+/cmake-build-*/
+/out/
+
+# In-source CMake output
+/CMakeCache.txt
+/CMakeFiles/
+/cmake_install.cmake
+/CTestTestfile.cmake
+/Makefile
+/compile_commands.json
+/_deps/
+
+# Compiled files
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.dll.a
+*.exe
+*.pdb
+*.ilk
+*.exp
+/vector_space
+/vector_space.exe
+
+# Test and coverage output
+/Testing/
+*.gcda
+*.gcno
+*.gcov
+
+# IDE and editor files
+/.vscode/
+/.idea/
+/.vs/
+*.user
+*.suo
+*.swp
+*.swo
+*~
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local tools, environment files, and secrets
+.aider*
+.webui_secret_key
+.env
+.env.*
+!.env.example
